@@ -53,6 +53,10 @@ var x := 0.0
 var speed := 0.0
 var stamina := 1.0       # "saans": breath. Pedalling spends it, coasting refills it.
 var panting := false     # out of breath until stamina climbs back to PANT_RECOVER
+var lungs := 1.0         # how fast pedalling uses breath (Chacha 1.0; the young men less)
+var resting := false     # a rival coasting to get his breath back
+var rest_at := 0.0       # a rival rests when his breath drops to this...
+var rest_until := 0.0    # ...and pedals again once it's back up to this
 var pain := 0.0          # "kamar dard": back pain. 100 means retired hurt.
 var fallen := 0.0        # seconds left lying in the road
 var fall_dir := 1.0
@@ -110,6 +114,11 @@ static func make_rival(rival_id: String, difficulty: float) -> RefCounted:
 	r.skill = clampf(float(d.skill) + 0.2 * difficulty, 0.0, 1.0)
 	r.lines = d.lines
 	r.weapon = d.weapon
+	# Younger lungs than Chacha's, but they still tire. Careful riders rest
+	# early; reckless ones (low skill) leave it until they're nearly empty.
+	r.lungs = 0.7
+	r.rest_at = lerpf(0.03, 0.2, r.skill)
+	r.rest_until = lerpf(0.4, 0.6, r.skill)
 	return r
 
 

@@ -59,6 +59,7 @@ Each race is one of Chacha's errands. Finish in the top three to unlock the next
 | 6 | **Last Date For The Bill**: the electricity bill queue | Master Jee, the boss rival, plus everything at once |
 
 **Meters**
+- **Rivals tire too.** They coast to get their breath back, and reckless ones run dry and pant: your chance to pass.
 - **Breath** drains while you pedal hard and refills while you coast (downhills are free). Run out and Chacha pants at two-thirds speed until he recovers.
 - **Back pain** rises with potholes, cricket balls, rival umbrellas and crashes. At 100 he is *retired hurt*.
 - **Chai** refills breath and soothes the back. **Jalebi** gives a sugar rush: faster, and no breath needed.

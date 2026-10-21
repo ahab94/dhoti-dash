@@ -220,7 +220,7 @@ func _ride(r, dt: float, pedal: bool, brake: bool, steer: float) -> void:
 	var pct: float = r.speed / MAX_SPEED
 	var slope: float = track.slope_at(r.z)
 	var top: float = r.top * (1.25 if r.boost > 0.0 else 1.0)
-	if r.is_player and r.panting:
+	if r.panting:
 		top *= PANT_SPEED
 	top *= clampf(1.0 - slope * 5.0, 0.7, 1.15)   # hills slow the top speed
 	if pedal:
@@ -239,8 +239,7 @@ func _ride(r, dt: float, pedal: bool, brake: bool, steer: float) -> void:
 	r.speed = maxf(r.speed - HILL_PULL * slope * dt, 0.0)   # downhill pulls you along
 	r.speed = minf(r.speed, MAX_SPEED * 1.35)
 
-	if r.is_player:
-		_breathe(r, dt, pedal, pct, slope)
+	_breathe(r, dt, pedal, pct, slope)
 
 	# Off the tarmac: dirt, stones, a goat. Slow down hard.
 	if absf(r.x) > 1.0 and r.speed > MAX_SPEED * OFFROAD_MAX:
@@ -271,12 +270,16 @@ func _breathe(r, dt: float, pedal: bool, pct: float, slope: float) -> void:
 		if r.stamina >= PANT_RECOVER:
 			r.panting = false
 	elif pedal:
-		r.stamina -= DRAIN * clampf(pct, 0.2, 1.0) * clampf(1.0 + slope * 25.0, 0.5, 2.0) * dt
+		r.stamina -= DRAIN * r.lungs * clampf(pct, 0.2, 1.0) * clampf(1.0 + slope * 25.0, 0.5, 2.0) * dt
 		if r.stamina <= 0.0:
 			r.stamina = 0.0
 			r.panting = true
-			r.say("Haah... haah... one minute...")
-			_log("panting")
+			if r.is_player:
+				r.say("Haah... haah... one minute...")
+				_log("panting")
+			else:
+				r.say("Haah... haah...", 1.5)
+				_log("rival_panting " + String(r.id))
 	else:
 		r.stamina += REGEN * dt
 	r.stamina = clampf(r.stamina, 0.0, 1.0)
@@ -321,7 +324,7 @@ func _step_rival(r, dt: float) -> void:
 
 	var keep_top: float = r.top
 	r.top = _pack_pace(r)
-	_ride(r, dt, true, false, _steer_towards(r, want_x))
+	_ride(r, dt, _rival_pedals(r), false, _steer_towards(r, want_x))
 	r.top = keep_top
 
 	# A dog at their ankles gets the weapon first.
@@ -339,6 +342,27 @@ func _step_rival(r, dt: float) -> void:
 			r.adjacent_for = 0.0
 	else:
 		r.adjacent_for = 0.0
+
+
+## Rivals get tired too. Each one pedals until his breath drops to rest_at,
+## then coasts until it's back up to rest_until. Careful riders (high skill)
+## rest early and never run dry; reckless ones leave it late and end up
+## panting, crawling at two-thirds speed, which is Chacha's chance. Nobody
+## rests in the final stretch: it's a sprint for the line.
+func _rival_pedals(r) -> bool:
+	if r.panting or r.z > track.length * FINAL_STRETCH:
+		r.resting = false
+		return true
+	if r.resting:
+		if r.stamina >= r.rest_until:
+			r.resting = false
+	elif r.stamina <= r.rest_at:
+		r.resting = true
+		if r.line_time <= 0.0:
+			r.say(["Ek minute... saans le loon.", "Phew. Hot day.", "Let me catch my breath..."][_line_index % 3], 1.6)
+			_line_index += 1
+		_log("rival_rest " + String(r.id))
+	return not r.resting
 
 
 ## How fast a rival rides (as a share of MAX_SPEED), so the pack stays around
