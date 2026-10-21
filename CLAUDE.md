@@ -39,6 +39,7 @@ A satirical desi combat-cycling game in Godot 4.7 (GDScript), in the style of 90
 
 ## Conventions
 - GDScript: values read from untyped objects need explicit types (`var x: float = r.speed`), not `:=`.
+- World text must use `Sprites.text()` or `text_size()`, which snap to TEXT_SIZES. Never pass a continuously scaled font size to draw_string: Godot caches glyphs per size, so it leaked about 2 GB and crashed iPhone browsers (v0.1.1). `--mem` prints memory every 2 s to check.
 - Sprites draw with `poly()`/`ellipse()`, which skip tiny shapes. Godot errors on degenerate polygons.
 - Movement: riders have sideways momentum (`vx`, eased by LAT_ACCEL). Hits and bumps add to `vx` instead of moving `x` directly. Acceleration fades near top speed. `_steer_towards` aims for a sideways speed proportional to the distance left, so riders settle without overshooting. The camera trails Chacha sideways (`renderer._cam_x`).
 - Voices are real recordings: `voices_in/` -> `bash tools/import_voices.sh` -> `audio/voice_rec/<line>.wav`. sound.gd loads the lines that exist (VOICE_LINES, VOICE_EVENTS) and layers CARTOON effects on events. Synthesized speech was tried and rejected by the user ("no emotion").

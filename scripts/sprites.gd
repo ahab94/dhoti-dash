@@ -167,10 +167,25 @@ static func ellipse(ci: CanvasItem, pos: Vector2, s: float, x: float, y: float, 
 	ci.draw_colored_polygon(out, fc(c))
 
 
+## Text sizes snap to this short list. Godot renders and keeps a full set of
+## letter images for every font size it is asked for, so text that scales
+## smoothly with distance (billboards, shop signs) would create a new set
+## every frame: about 2 GB within half a minute, which crashes phone browsers.
+const TEXT_SIZES := [8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64]
+
+
+static func text_size(px: float) -> int:
+	var best: int = TEXT_SIZES[0]
+	for q in TEXT_SIZES:
+		if q <= px:
+			best = q
+	return best
+
+
 static func text(ci: CanvasItem, pos: Vector2, s: float, x: float, y: float, width: float, size: float, msg: String, c: Color, font: Font) -> void:
-	var fs := int(size * s)
-	if fs < 7:
+	if size * s < 7.0:
 		return
+	var fs := text_size(size * s)
 	ci.draw_string(font, P(pos, s, x, y), msg, HORIZONTAL_ALIGNMENT_CENTER, width * s, fs, fc(c))
 
 
@@ -617,7 +632,7 @@ static func fight_fx(ci: CanvasItem, pos: Vector2, s: float, r, t: float, font: 
 			var rr := rad if i % 2 == 0 else rad * 0.55
 			pts.append(c + Vector2.from_angle(i * TAU / 16.0 + k) * rr)
 		ci.draw_colored_polygon(pts, Color(1, 0.85, 0.1, 1.0 - k * 0.6))
-		var fs := int(maxf(30.0 * s * 1.6, 12.0))
+		var fs := text_size(maxf(30.0 * s * 1.6, 12.0))
 		ci.draw_string_outline(font, c + Vector2(-rad, fs * 0.35), r.hit_word, HORIZONTAL_ALIGNMENT_CENTER, rad * 2.0, fs, 6, INK)
 		ci.draw_string(font, c + Vector2(-rad, fs * 0.35), r.hit_word, HORIZONTAL_ALIGNMENT_CENTER, rad * 2.0, fs, Color("e63946"))
 	if not r.is_player and not r.out and r.pain > 0.0 and t - r.last_hit < 4.0:

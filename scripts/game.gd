@@ -142,6 +142,10 @@ func _physics_process(delta: float) -> void:
 		_end_timer -= delta
 		if _end_timer <= 0.0:
 			_finish()
+	if _flags.has("mem") and fmod(_sim_time, 2.0) < delta:
+		# Memory watch: static (engine) memory and video memory, in MB.
+		print("MEM t=%.0f static=%.1f video=%.1f" % [_sim_time, OS.get_static_memory_usage() / 1048576.0,
+			Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0])
 	if _flags.has("trace") and fmod(_sim_time, 0.5) < delta:
 		var p = race.player
 		print("TRACE t=%.1f z=%.0f x=%.2f v=%.0f st=%.2f pain=%.0f pos=%d" % [
