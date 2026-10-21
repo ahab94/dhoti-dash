@@ -4,3 +4,4 @@ LOOM_BLOCKED.md
 build/
 dist/
 override.cfg
+.claude/

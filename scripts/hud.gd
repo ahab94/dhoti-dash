@@ -32,6 +32,7 @@ var _next_button: Button
 var _menu_panel: PanelContainer
 var _race_list: VBoxContainer
 var _menu_money: Label
+var _help: Label
 var _touch: Node2D
 var _buttons: Dictionary = {}   # action -> TouchScreenButton
 var _pause: Button
@@ -141,7 +142,7 @@ func _draw() -> void:
 		_text(Vector2(0, size.y * 0.36), str(c), 110, SUN, w)
 		var lines: PackedStringArray = String(race.data.errand).split("\n")
 		if show_touch:
-			lines.append("Pedalling is automatic. Hold REST to get your breath back.")
+			lines.append("Auto-pedal is on. Hold REST to catch your breath.")
 		for i in lines.size():
 			_text(Vector2(0, size.y * 0.36 + 60 + i * 34), lines[i], 26, CREAM, w)
 	elif race.t < 0.8:
@@ -239,6 +240,8 @@ func show_menu(races: Array, best_pos: Dictionary, money: int) -> void:
 		if unlocked and (first == null or best == 0):
 			first = b
 	_menu_money.text = "Rupees in the dhoti fold: %d" % money
+	_help.text = ("Tap an errand. Steer with < and >, SWING, BELL, hold REST to coast." if show_touch
+		else "Up: pedal   Down: brake   Left/Right: steer   Space: swing   B: bell")
 	_menu_panel.visible = true
 	_layout()
 	if first:
@@ -267,7 +270,7 @@ func _build_menu() -> void:
 	_menu_money.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_menu_money)
 	var help := _label(18, INK, false)
-	help.text = "Up: pedal   Down: brake   Left/Right: steer   Space: swing   B: bell"
+	_help = help
 	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	help.custom_minimum_size.x = 560
