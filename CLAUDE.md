@@ -35,7 +35,11 @@ A satirical desi combat-cycling game in Godot 4.7 (GDScript), in the style of 90
 ## Release and videos
 - Repo: github.com/ahab94/dhoti-dash (public). Pushing a `v*` tag runs `.github/workflows/release.yml`, which runs the checks, exports Windows/macOS/Linux/Web, attaches zips to a GitHub Release (notes from `docs/releases/<tag>.md`) and deploys the web build to Pages.
 - Videos: `bash tools/video/record_footage.sh` (portrait/landscape footage + .events), then `python3 tools/video/make_video_audio.py`, then `/usr/bin/python3 tools/video/make_videos.py`. The video list lives in `tools/video/videos.py`, cut around named events, so re-recording keeps the cuts.
-- iPhone audio: the Web preset's `html/head_include` script switches iOS to media playback on the first tap (`navigator.audioSession`, plus a silent-clip fallback) and resumes suspended AudioContexts. Without it iPhones are silent when the silent switch is on.
+- iPhone audio:
+  - The web page script lives in `tools/web/head.js`. `python3 tools/web/update_head.py` injects it into the Web preset's `html/head_include`; never hand-edit that line.
+  - On the first tap it switches iOS to media playback (`navigator.audioSession`, plus a silent-clip fallback) and resumes suspended AudioContexts.
+  - `?debug=audio` shows a live audio-state panel with a TEST BEEP button.
+  - Web audio uses Stream mode (`audio/general/default_playback_type.web=0` in project.godot), not Godot's default Sample mode.
 - Phones: touch mode auto-pedals (hold REST to coast). The layout switches to a 720x1280 base when the window is portrait (`game._fit_layout`).
 
 ## Conventions
