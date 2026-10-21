@@ -1,0 +1,15 @@
+Record one file per line and name it exactly like this (any audio format).
+Act it out: big, cartoonish, emotional. Two or three takes each are fine,
+keep the best one.
+
+chacha_oteri    Old man, surprised:            "O teri!"
+chacha_arey     Old man, annoyed:              "Arey! Arey arey arey!"
+chacha_baapre   Old man, shocked:              "Baap re baap!"
+chacha_hai      Old man, in pain:              "Hai! Meri kamar!"
+chacha_oof      Old man, winded:               "Oof!"
+chacha_hehe     Old man, cheeky chuckle:       "He he he he!"
+chacha_scream   Old man, falling, cartoon:     "Aaaaaaaaah!"
+rival_ow        Young man, hit:                "Ow!" / "Aah!"
+rival_oteri     Young man, surprised:          "O teri!"
+rival_scream    Young man, knocked out:        long cartoon scream
+aunty_haaw      Aunty, scandalised gasp:       "Haaw!"
