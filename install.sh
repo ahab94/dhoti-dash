@@ -45,20 +45,37 @@ for tool in curl unzip; do
 done
 
 echo "Finding the latest release..."
-url=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | grep -o "https://[^\"]*-$platform\.zip" | head -1 || true)
+api=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest")
+# Only accept assets on this repo's own release download path, read from the
+# browser_download_url field (not any URL that happens to appear in the JSON).
+base="https://github.com/$REPO/releases/download/"
+pick() {  # file-name suffix
+	printf '%s' "$api" | grep -o "\"browser_download_url\": *\"$base[^\"]*$1\"" | head -1 | sed 's/.*"\(https:[^"]*\)"$/\1/'
+}
+url=$(pick "-$platform.zip" || true)
+sums_url=$(pick "/SHA256SUMS.txt" || true)
 [ -n "$url" ] || { echo "Couldn't find a $platform build in the latest release. See https://github.com/$REPO/releases"; exit 1; }
+[ -n "$sums_url" ] || { echo "The latest release has no SHA256SUMS.txt, so the download can't be verified. See https://github.com/$REPO/releases"; exit 1; }
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-echo "Downloading ${url##*/}..."
-curl -fL --progress-bar -o "$tmp/game.zip" "$url"
-unzip -q "$tmp/game.zip" -d "$tmp/game"
+file=${url##*/}
+echo "Downloading $file..."
+curl -fL --progress-bar -o "$tmp/$file" "$url"
+curl -fsSL -o "$tmp/SHA256SUMS.txt" "$sums_url"
+# Verify the zip against the published checksum before unpacking or running anything.
+want=$(grep " \*\?$file\$" "$tmp/SHA256SUMS.txt" | awk '{print $1}' | head -1)
+if command -v sha256sum >/dev/null; then got=$(sha256sum "$tmp/$file" | awk '{print $1}'); else got=$(shasum -a 256 "$tmp/$file" | awk '{print $1}'); fi
+[ -n "$want" ] && [ "$want" = "$got" ] || { echo "Checksum mismatch for $file: refusing to install."; exit 1; }
+echo "Checksum OK."
+unzip -q "$tmp/$file" -d "$tmp/game"
 
 if [ "$platform" = macos ]; then
 	mkdir -p "$dest"
 	rm -rf "$app"
 	mv "$tmp/game/$NAME.app" "$dest/"
-	# The app is ad-hoc signed, not notarized; clear the quarantine flag so it opens normally.
+	# The app is ad-hoc signed, not notarized; clear the quarantine flag so it
+	# opens normally. Only done after the checksum above matched.
 	xattr -dr com.apple.quarantine "$app" 2>/dev/null || true
 	echo "Installed: $app"
 	[ -n "${NO_LAUNCH:-}" ] || open "$app"

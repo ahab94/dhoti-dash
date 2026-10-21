@@ -14,12 +14,22 @@ $dest = Join-Path $env:LOCALAPPDATA 'DhotiDash'
 
 Write-Host 'Finding the latest release...'
 $release = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest"
-$asset = $release.assets | Where-Object { $_.name -like '*-windows.zip' } | Select-Object -First 1
+$base = "https://github.com/$repo/releases/download/"
+$asset = $release.assets | Where-Object { $_.name -like '*-windows.zip' -and $_.browser_download_url.StartsWith($base) } | Select-Object -First 1
+$sums = $release.assets | Where-Object { $_.name -eq 'SHA256SUMS.txt' -and $_.browser_download_url.StartsWith($base) } | Select-Object -First 1
 if (-not $asset) { throw "No Windows build in the latest release. See https://github.com/$repo/releases" }
+if (-not $sums) { throw "The latest release has no SHA256SUMS.txt, so the download can't be verified. See https://github.com/$repo/releases" }
 
 $zip = Join-Path $env:TEMP $asset.name
 Write-Host "Downloading $($asset.name)..."
 Invoke-WebRequest $asset.browser_download_url -OutFile $zip -UseBasicParsing
+# Verify the zip against the published checksum before unpacking or running anything.
+$sumsText = (Invoke-WebRequest $sums.browser_download_url -UseBasicParsing).Content
+if ($sumsText -is [byte[]]) { $sumsText = [Text.Encoding]::UTF8.GetString($sumsText) }
+$want = ($sumsText -split "`n" | Where-Object { $_ -match [regex]::Escape($asset.name) + '\s*$' } | Select-Object -First 1) -split '\s+' | Select-Object -First 1
+$got = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+if (-not $want -or $want.ToLower() -ne $got) { Remove-Item $zip; throw "Checksum mismatch for $($asset.name): refusing to install." }
+Write-Host 'Checksum OK.' 
 if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
 Expand-Archive $zip -DestinationPath $dest -Force
 Remove-Item $zip
